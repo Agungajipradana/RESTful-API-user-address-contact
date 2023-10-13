@@ -226,3 +226,33 @@ describe("PATCH /api/users/current", function () {
     expect(result.status).toBe(401);
   });
 });
+
+// Unit test delete users
+describe("DELETE, /api/users/logout", function () {
+  beforeEach(async () => {
+    await createTestUser();
+  });
+
+  afterEach(async () => {
+    await removeTestUser();
+  });
+
+  // unit test delete/user logput yang berhasil dengan menampilkan "should can logout"
+  it("should can logout", async () => {
+    const result = await supertest(web).delete("/api/users/logout").set("Authorization", "test");
+
+    expect(result.status).toBe(200);
+    expect(result.body.data).toBe("OK");
+
+    // Mengecek ke database apakah datanya sudah null atau belum
+    const user = await getTestUser();
+    expect(user.token).toBeNull();
+  });
+
+  // unit test delete/user logput yang gagal dengan menampilkan "should reject logout if token is inavlid"
+  it("should reject logout if token is inavlid", async () => {
+    const result = await supertest(web).delete("/api/users/logout").set("Authorization", "salah");
+
+    expect(result.status).toBe(401);
+  });
+});

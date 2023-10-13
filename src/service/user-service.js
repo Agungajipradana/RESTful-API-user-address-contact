@@ -5,6 +5,7 @@ import { validate } from "../validation/validation.js";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 
+// user register
 const register = async (request) => {
   const user = validate(registerUserValidation, request);
 
@@ -29,6 +30,7 @@ const register = async (request) => {
   });
 };
 
+// user login
 const login = async (request) => {
   const loginRequest = validate(loginUserValidation, request);
 
@@ -69,6 +71,7 @@ const login = async (request) => {
   });
 };
 
+// user get
 const get = async (username) => {
   username = validate(getUserValidation, username);
 
@@ -92,6 +95,7 @@ const get = async (username) => {
   return user;
 };
 
+// user update
 const update = async (request) => {
   const user = validate(updateUserValidation, request);
 
@@ -129,4 +133,31 @@ const update = async (request) => {
   });
 };
 
-export default { register, login, get, update };
+// user logout
+const logout = async (username) => {
+  username = validate(getUserValidation, username);
+
+  const user = await prismaClient.user.findUnique({
+    where: {
+      username: username,
+    },
+  });
+
+  if (!user) {
+    throw new ResponseError(404, "user is not found");
+  }
+
+  return prismaClient.user.update({
+    where: {
+      username: username,
+    },
+    data: {
+      token: null,
+    },
+    select: {
+      username: true,
+    },
+  });
+};
+
+export default { register, login, get, update, logout };
