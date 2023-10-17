@@ -1,6 +1,7 @@
+import { logger } from "../application/logging.js";
 import contactService from "../service/contact-service.js";
 
-// create contact
+// create contact controller
 const create = async (req, res, next) => {
   try {
     const user = req.user;
@@ -14,7 +15,7 @@ const create = async (req, res, next) => {
   }
 };
 
-// get contact
+// get contact controller
 const get = async (req, res, next) => {
   try {
     const user = req.user;
@@ -28,7 +29,7 @@ const get = async (req, res, next) => {
   }
 };
 
-// update contact
+// update contact controller
 const update = async (req, res, next) => {
   try {
     const user = req.user;
@@ -45,7 +46,7 @@ const update = async (req, res, next) => {
   }
 };
 
-// remove contact
+// remove contact controller
 const remove = async (req, res, next) => {
   try {
     const user = req.user;
@@ -60,4 +61,30 @@ const remove = async (req, res, next) => {
   }
 };
 
-export default { create, get, update, remove };
+// search contact controller
+const search = async (req, res, next) => {
+  try {
+    /*
+    untuk debug gunakan logger.info(req.query)
+    logger.info(req.query);
+    */
+    const user = req.user;
+    const request = {
+      name: req.query.name,
+      email: req.query.email,
+      phone: req.query.phone,
+      page: req.query.page,
+      size: req.query.size,
+    };
+
+    const result = await contactService.search(user, request);
+    res.status(200).json({
+      data: result.data,
+      paging: result.paging,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export default { create, get, update, remove, search };

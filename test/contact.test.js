@@ -1,6 +1,7 @@
 import supertest from "supertest";
-import { createTestContact, createTestUser, getTestContact, removeAllTestContacts, removeTestUser } from "./test-util.js";
+import { createManyTestContact, createTestContact, createTestUser, getTestContact, removeAllTestContacts, removeTestUser } from "./test-util.js";
 import { web } from "../src/application/web.js";
+import { logger } from "../src/application/logging.js";
 
 // Unit test create contact
 describe("POST /api/contacts", function () {
@@ -191,5 +192,105 @@ describe("DELETE /api/contacts/:contactId", function () {
       .set("Authorization", "test");
 
     expect(result.status).toBe(404);
+  });
+});
+
+// unit test search contact
+describe("GET /api/contacts", function () {
+  beforeEach(async () => {
+    await createTestUser();
+    await createManyTestContact();
+  });
+
+  afterEach(async () => {
+    await removeAllTestContacts();
+    await removeTestUser();
+  });
+
+  // unit test search contact tanpa parameter untuk yang berhasil dengan menampilkan "should can search without parameter"
+  it("should can search without parameter", async () => {
+    const result = await supertest(web).get("/api/contacts").set("Authorization", "test");
+
+    expect(result.status).toBe(200);
+    // data yang dicari defaultnya 10
+    expect(result.body.data.length).toBe(10);
+    // paging defaultnya 1
+    expect(result.body.paging.page).toBe(1);
+    expect(result.body.paging.total_page).toBe(2);
+    expect(result.body.paging.total_item).toBe(15);
+  });
+
+  // unit test search contact ke page 2 untuk yang berhasil dengan menampilkan "should can search to page 2"
+  it("should can search to page 2", async () => {
+    const result = await supertest(web)
+      .get("/api/contacts")
+      .query({
+        page: 2,
+      })
+      .set("Authorization", "test");
+
+    logger.info(result.body);
+
+    expect(result.status).toBe(200);
+    // data yang dicari pada page 2, karna data ada 15 dan page 1 ada 10 maka pada page 2 tersisa 5
+    expect(result.body.data.length).toBe(5);
+    // paging pada page 2
+    expect(result.body.paging.page).toBe(2);
+    expect(result.body.paging.total_page).toBe(2);
+    expect(result.body.paging.total_item).toBe(15);
+  });
+
+  // unit test search contact berdasarkan name untuk yang berhasil dengan menampilkan "should can search using name"
+  it("should can search using name", async () => {
+    const result = await supertest(web)
+      .get("/api/contacts")
+      .query({
+        name: "test 1",
+      })
+      .set("Authorization", "test");
+
+    logger.info(result.body);
+
+    expect(result.status).toBe(200);
+    expect(result.body.data.length).toBe(6);
+    expect(result.body.paging.page).toBe(1);
+    expect(result.body.paging.total_page).toBe(1);
+    expect(result.body.paging.total_item).toBe(6);
+  });
+
+  // unit test search contact berdasarkan email untuk yang berhasil dengan menampilkan "should can search using email"
+  it("should can search using email", async () => {
+    const result = await supertest(web)
+      .get("/api/contacts")
+      .query({
+        email: "test1",
+      })
+      .set("Authorization", "test");
+
+    logger.info(result.body);
+
+    expect(result.status).toBe(200);
+    expect(result.body.data.length).toBe(6);
+    expect(result.body.paging.page).toBe(1);
+    expect(result.body.paging.total_page).toBe(1);
+    expect(result.body.paging.total_item).toBe(6);
+  });
+
+  // unit test search contact berdasarkan phone untuk yang berhasil dengan menampilkan "should can search using phone"
+  it("should can search using phone", async () => {
+    const result = await supertest(web)
+      .get("/api/contacts")
+      .query({
+        phone: "0809000001",
+      })
+      .set("Authorization", "test");
+
+    logger.info(result.body);
+
+    expect(result.status).toBe(200);
+    expect(result.body.data.length).toBe(6);
+    expect(result.body.paging.page).toBe(1);
+    expect(result.body.paging.total_page).toBe(1);
+    expect(result.body.paging.total_item).toBe(6);
   });
 });
